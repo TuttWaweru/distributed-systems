@@ -37,6 +37,62 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
       throw new WsException(error?.message)
     }
   }
-  async handleDisconnect(client: Socket) {}
+  async handleDisconnect(client: Socket) {
+    try {
+      console.log(`Client Disconnected: ${client.id}`);
+      console.log(`--------------------------\n`);
+      console.log(`initial connected clients`);
+      console.table(this.connectedUsers);
+      console.log(`connected clients length`);
+      console.log(this.connectedUsers.length);
+      console.log(`--------------------------\n`);
+      let disconnectedClient = this.connectedUsers.find(val => val?.client === client.id)
+      if (disconnectedClient !== undefined) {
+        this.connectedUsers = this.connectedUsers.reduce(
+          (res, { rank, client }, index, arr ) => {
+            if ((disconnectedClient?.rank as number) === 0 && index !== 0) {
+              console.log(`(disconnectedClient?.rank as number) === 0 && index !== 0\n`)
+              return [
+                ...res,
+                {
+                  client,
+                  rank: rank - 1
+                }
+              ]
+            }else if (rank < (disconnectedClient?.rank as number) && (disconnectedClient?.rank as number) !== 0) {
+              console.log(`rank < (disconnectedClient?.rank as number) && (disconnectedClient?.rank as number) !== 0\n`)
+              return [
+                ...res,
+                {
+                  rank,
+                  client
+                }
+              ]
+            } else if (rank > (disconnectedClient?.rank as number) && (disconnectedClient?.rank as number) !== 0) {
+              console.log(`rank > (disconnectedClient?.rank as number) && (disconnectedClient?.rank as number) !== 0\n`)
+              return [
+                ...res,
+                {
+                  client,
+                  rank: rank - 1
+                }
+              ]
+            } else {
+              console.log(`default\n`)
+              return res
+            }
+          },
+          ([] as ConnectedUser[])
+        );
+      }
+      console.log(`updated connected clients`);
+      console.table(this.connectedUsers);
+      console.log(`updated connected clients length`);
+      console.log(this.connectedUsers.length);
+      console.log(`--------------------------\n`);
+    } catch (error) {
+      throw new WsException(error?.message)
+    }
+  }
     
 }
