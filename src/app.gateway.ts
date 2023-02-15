@@ -37,6 +37,7 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
       throw new WsException(error?.message)
     }
   }
+  
   async handleDisconnect(client: Socket) {
     try {
       console.log(`Client Disconnected: ${client.id}`);
@@ -90,6 +91,39 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
       console.log(`updated connected clients length`);
       console.log(this.connectedUsers.length);
       console.log(`--------------------------\n`);
+    } catch (error) {
+      throw new WsException(error?.message)
+    }
+  }
+  
+  @SubscribeMessage('send_command')
+  async onCommandSent(client, data: any): Promise<any> {
+    try {
+      console.log(`Client sent command: ${client.id}`);
+      console.log(`--------------------------\n`);
+      console.log(`connected clients`);
+      console.table(this.connectedUsers);
+      console.log(`--------------------------\n`);
+      let initiator = this.connectedUsers.find(val => val?.client === client.id)
+      let executors = this.connectedUsers.reduce(
+        (result, value) => {
+          if ((initiator?.rank as number) < value?.rank) {
+            return [
+              ...result,
+              value
+            ]
+          }
+          return result
+        },
+        ([] as ConnectedUser[])
+      )
+      console.log(`executors`);
+      console.table(executors);
+      console.log(`--------------------------\n`);
+      if (executors.length > 0) {
+        this.server.to(executors.map(({ client }) => client)).emit('execute_command', data);;
+      }
+      return true
     } catch (error) {
       throw new WsException(error?.message)
     }
