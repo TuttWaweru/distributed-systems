@@ -7,6 +7,7 @@ interface ConnectedUser {
 
 // const socketPort = Number(process.env.BRIDGE_GUEST_SOCKET_PORT)
 const socketPort = 8000
+const clientLimit = 1
 @WebSocketGateway(socketPort, { namespace: 'clients' })
 export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -27,6 +28,9 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
       console.log(`connected clients length`);
       console.log(this.connectedUsers.length);
       console.log(`--------------------------\n`);
+      if (clientLimit === this.connectedUsers.length) {
+        throw new Error(`Client limit exceeded `)
+      }
       this.connectedUsers = [...this.connectedUsers, { rank: this.connectedUsers.length, client: client.id }];
       console.log(`updated connected clients`);
       console.table(this.connectedUsers);
